@@ -7,7 +7,7 @@ import os
 # PAGE CONFIG
 # ============================================================
 st.set_page_config(
-    page_title="Shop-EY Market Intelligence Engine",
+    page_title="Market Intelligence and Investment Prioritization Engine",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -317,7 +317,7 @@ def get_expert_advice(result, api_key):
 # Hero
 st.markdown("""
 <div class="hero-header">
-    <h1>Global Market Intelligence Engine</h1>
+    <h1>Market Intelligence and Investment Prioritization Engine</h1>
     <div class="gold-line"></div>
     <p>Input the macro indicators of any market to receive an investment assessment,<br>
     powered by analysis of 43 e-commerce companies across 13 markets worldwide.</p>
@@ -371,8 +371,11 @@ with col_btn1:
 # RESULTS
 # ============================================================
 if analyze:
-    result = predict_market(macro_input)
-    st.session_state["result"] = result
+    if all(v == 0 for v in macro_input.values()):
+        st.warning("Please select a preset market or enter values for the macro indicators before analyzing.")
+    else:
+        result = predict_market(macro_input)
+        st.session_state["result"] = result
 
 if "result" in st.session_state:
     result = st.session_state["result"]
