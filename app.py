@@ -331,19 +331,24 @@ preset_options = ["Custom (enter manually)"]
 preset_options += [f"{c['country']} ({c['region']})" for c in MODEL["countries"]]
 preset_options.append("MX (New Market)")
 
-selected_preset = st.selectbox("Preset", preset_options, label_visibility="collapsed")
+def load_preset():
+    sel = st.session_state.get("preset_select", "Custom (enter manually)")
+    if sel == "Custom (enter manually)":
+        vals = {key: 0.0 for key, _, _ in FIELDS}
+    elif sel == "MX (New Market)":
+        vals = MEXICO_PRESET
+    else:
+        cc = sel.split(" ")[0]
+        cd = next((c for c in MODEL["countries"] if c["country"] == cc), None)
+        vals = cd["macro"] if cd else {key: 0.0 for key, _, _ in FIELDS}
+    for key, _, _ in FIELDS:
+        st.session_state[f"input_{key}"] = float(vals.get(key, 0.0))
+    # Clear previous results when preset changes
+    if "result" in st.session_state:
+        del st.session_state["result"]
 
-# Determine values
-preset_values = {}
-if selected_preset == "Custom (enter manually)":
-    preset_values = {key: 0.0 for key, _, _ in FIELDS}
-elif selected_preset == "MX (New Market)":
-    preset_values = MEXICO_PRESET
-else:
-    country_code = selected_preset.split(" ")[0]
-    country_data = next((c for c in MODEL["countries"] if c["country"] == country_code), None)
-    if country_data:
-        preset_values = country_data["macro"]
+selected_preset = st.selectbox("Preset", preset_options, label_visibility="collapsed",
+                                key="preset_select", on_change=load_preset)
 
 # Input form
 st.markdown('<div class="section-header">Macro Indicators</div>', unsafe_allow_html=True)
@@ -353,10 +358,8 @@ macro_input = {}
 cols = st.columns(4)
 for i, (key, label, wb) in enumerate(FIELDS):
     with cols[i % 4]:
-        default = float(preset_values.get(key, 0.0))
         macro_input[key] = st.number_input(
             f"{label}",
-            value=default,
             format="%.4f" if "trend" in key else "%.2f",
             help=f"World Bank: {wb}",
             key=f"input_{key}",
